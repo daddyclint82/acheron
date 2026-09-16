@@ -425,12 +425,18 @@ class IntentRouter:
 
 
 class OllamaConnector:
-    """Hardened async Ollama client tuned for small models.
+    """Hardened async Ollama client.
 
-    - system/user message split (small models follow it far better than one blob)
-    - num_predict cap so small models can't ramble
+    - system/user message split (works across model sizes; reasoning models
+      follow it, small models need it)
+    - num_predict cap to bound answer length; default is generous because
+      the default model is a well-behaved reasoning model. Small-model
+      deployments should lower OLLAMA_NUM_PREDICT.
     - retries with backoff + hard timeout so a hung model never wedges the bot
     - keep_alive so the model stays loaded between messages
+    - defensive read of response['message']['content'] so reasoning-capable
+      models that emit a separate reasoning field never leak internal
+      monologue to users
     - graceful in-character fallback when the LLM is down
     """
 
@@ -517,7 +523,10 @@ class OllamaConnector:
                     loop.run_in_executor(self.executor, _chat),
                     timeout=effective_timeout
                 )
-                text = (response['message']['content'] or '').strip()
+                # Defensive read: reasoning-capable models (e.g. minimax-m3:cloud)
+                # may populate a 'thinking'/'reasoning' field instead of 'content'.
+                # .get with default '' keeps the bot robust against that shape.
+                text = (response['message'].get('content') or '').strip()
                 if text:
                     self.last_success_at = time.time()
                     self.last_latency = time.time() - started
@@ -734,7 +743,11 @@ class ResponseHumanizer:
     }
 
     def __init__(self):
-        self.typo_chance = 0.04
+        # Random adjacent-character swap was tuned for small-model output
+        # that already felt mechanical. Reasoning models produce natural
+        # text on their own, so the default is 0. Dial up via
+        # HUMANIZER_TYPO_CHANCE in .env if you want the casual-texting feel.
+        self.typo_chance = float(os.getenv('HUMANIZER_TYPO_CHANCE', '0.0'))
 
     def process(self, text: str, analysis: Dict, mode: str = 'chat') -> str:
         # Strip quotes small models love to wrap responses in

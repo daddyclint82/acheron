@@ -31,7 +31,7 @@ In its own words:
 | **Stats** | `!stats` → hard numbers: messages, active channels, joins, busiest channels, top contributors (owner-only). |
 | **On-Demand Snapshot** | `!snapshot` → pull-only server awareness with an AI-written read of the room. Privacy-respecting: aggregates only, never stores message content. |
 | **Memory** | Remembers traits and unresolved threads per user. `!forgetme` wipes everything Acheron knows about you. |
-| **Local LLM** | Runs against a local **Ollama** server (default model `phi3`; the `Modelfile` defines `qwen3.5:4b`). No data leaves the host. |
+| **Local LLM** | Runs against an **Ollama** server — local or remote. Default model is `minimax-m3:cloud` (reasoning-capable, 196k context). The `Modelfile` defines `qwen3.5:4b` as an alternative. Configure via `OLLAMA_HOST` and `OLLAMA_MODEL` in `.env`. |
 
 ## Architecture
 
@@ -74,7 +74,7 @@ In its own words:
 ### Tech Stack
 
 - Python 3.12 / `discord.py` 2.7
-- Ollama (local LLM server; default model `phi3`)
+- Ollama (local or remote LLM server; default model `minimax-m3:cloud`)
 - `vaderSentiment` (sentiment scoring)
 - `aiohttp` (async HTTP), `numpy` (Poisson delays, CLI mode only)
 - SQLite (data persistence, WAL mode)
