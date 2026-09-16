@@ -31,3 +31,4 @@ logs/*.log
 .vscode/
 .idea/
 *.swp
+.venv-test/

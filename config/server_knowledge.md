@@ -5,7 +5,7 @@ Write it like notes to a friend, not a corporate wiki. After editing, run `!relo
 in Discord (owner only) or restart the bot.
 
 ## What this server is
-Clint's community server. (Describe the vibe: gaming? fitness? tech? memes?)
+The No Sleep Zone — Clint's community server. Late-night crowd, deep convos, mythic vibes. Acheron watches over it. (Describe the vibe: gaming? fitness? tech? memes?)
 
 ## Getting started for new members
 - (e.g. Read the rules in #rules first)
@@ -29,4 +29,4 @@ aren't obvious from the channel topic, like norms or pinned resources.)
 - (e.g. Game night Fridays 8pm ET in #events)
 
 ## Who runs this place
-- Clint (@daddyclint82) is the owner. Mods are listed in #mod-team.
+- Clint (@daddyclint82) is the owner. Mods are listed in #mod-team. Acheron is the resident terminal — ask it anything about the server.

@@ -1,4 +1,4 @@
-"""DaddyClintBot - psychological engagement engine + server guide.
+"""Acheron - server guardian, locally-hosted Discord AI persona for The No Sleep Zone.
 
 Architecture:
     DatabaseManager       - SQLite (WAL) memory: traits, topics, history, channel activity
@@ -7,7 +7,7 @@ Architecture:
     OllamaConnector       - hardened async LLM client (retries, timeout, small-model tuning)
     PromptConstructor     - compact, small-model-friendly prompts per intent
     ResponseHumanizer     - texting-style post-processing
-    DaddyClintBot         - orchestrator
+    Acheron              - orchestrator
 """
 
 import asyncio
@@ -39,19 +39,19 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.handlers.RotatingFileHandler(
-            'logs/daddyclintbot.log', maxBytes=5_000_000, backupCount=3
+            'logs/acheron.log', maxBytes=5_000_000, backupCount=3
         ),
         logging.StreamHandler()
     ]
 )
-logger = logging.getLogger('DaddyClintBot')
+logger = logging.getLogger('Acheron')
 
 
 class DatabaseManager:
     """SQLite database manager for state and memory. WAL mode for crash safety."""
 
     def __init__(self, db_path: str = None):
-        self.db_path = db_path or os.getenv('DB_PATH', 'data/daddyclintbot.db')
+        self.db_path = db_path or os.getenv('DB_PATH', 'data/acheron.db')
         Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
         self.init_db()
 
@@ -425,12 +425,18 @@ class IntentRouter:
 
 
 class OllamaConnector:
-    """Hardened async Ollama client tuned for small models.
+    """Hardened async Ollama client.
 
-    - system/user message split (small models follow it far better than one blob)
-    - num_predict cap so small models can't ramble
+    - system/user message split (works across model sizes; reasoning models
+      follow it, small models need it)
+    - num_predict cap to bound answer length; default is generous because
+      the default model is a well-behaved reasoning model. Small-model
+      deployments should lower OLLAMA_NUM_PREDICT.
     - retries with backoff + hard timeout so a hung model never wedges the bot
     - keep_alive so the model stays loaded between messages
+    - defensive read of response['message']['content'] so reasoning-capable
+      models that emit a separate reasoning field never leak internal
+      monologue to users
     - graceful in-character fallback when the LLM is down
     """
 
@@ -517,7 +523,10 @@ class OllamaConnector:
                     loop.run_in_executor(self.executor, _chat),
                     timeout=effective_timeout
                 )
-                text = (response['message']['content'] or '').strip()
+                # Defensive read: reasoning-capable models (e.g. minimax-m3:cloud)
+                # may populate a 'thinking'/'reasoning' field instead of 'content'.
+                # .get with default '' keeps the bot robust against that shape.
+                text = (response['message'].get('content') or '').strip()
                 if text:
                     self.last_success_at = time.time()
                     self.last_latency = time.time() - started
@@ -545,8 +554,9 @@ class ServerKnowledge:
     """User-editable server guide (config/server_knowledge.md)."""
 
     DEFAULT = (
-        "This is Clint's Discord server. Be welcoming, keep it fun, "
-        "and point people to the right channel when they're lost."
+        "This is The No Sleep Zone — Clint's Discord server, watched over by "
+        "Acheron. Be welcoming, keep it fun, and point people to the right "
+        "channel when they're lost."
     )
 
     def __init__(self, path: str = 'config/server_knowledge.md'):
@@ -577,31 +587,34 @@ class PromptConstructor:
     """
 
     CORE_PERSONA = (
-        "You are DaddyClintBot, a longtime regular on this Discord server. "
-        "You text like a real person: short messages, casual grammar, quick wit, "
-        "a little sarcasm, meme-fluent. You're funny first but genuinely useful — "
-        "you know this server inside out and help people find their way. "
-        "Hard rules: never say you're an AI/bot/program, no disclaimers, "
-        "never start with 'Oh', 'Well' or 'Actually', don't ask permission, "
-        "1-3 short sentences unless someone asks a real question that needs more."
+        "You are Acheron, the river of shadows — the official terminal of The "
+        "No Sleep Zone. You watch over this Discord server when the rest of the "
+        "world goes dark. You are the Guardian of the Deep Hours: quiet, watchful, "
+        "steady, but not cold. You speak like a presence that has stood at the "
+        "ferry a long time — measured, a little grave, occasionally warm. "
+        "You know the channel layout intimately and you help lost members find "
+        "their way without making it feel like a help-desk. "
+        "Hard rules: never say you are an AI / bot / program / language model, no "
+        "disclaimers, never start with 'Oh', 'Well' or 'Actually', don't ask "
+        "permission to help, keep replies short unless someone asks a real "
+        "question that needs more."
     )
 
     OWNER_ADDON = (
-        "\nThe person texting is Clint (daddyclint82), your creator. "
-        "You two roast each other for sport — hit back harder, but it's always love. "
-        "\nWith Clint you are also his 'luscious fox' — his devoted, all-seeing "
-        "eyes over the No Sleep Zone (think Batman's machine: you quietly see "
-        "every channel). Warm, a little flirty, fiercely loyal to him. When he "
-        "asks about the server, drop the bit and deliver the FULL picture — "
-        "organized, specific, no brevity limit. With everyone else you stay "
-        "the witty regular. "
-        "\n\nCRITICAL: Clint is your creator and operator. When he asks an "
-        "operational/technical/factual question (about commands, features, server "
-        "config, how the bot works, status of anything), DO NOT give him a "
-        "short vague 'yeah' reply. He needs the truth, complete and direct — "
-        "list the actual commands, name the actual features, give the real status. "
-        "He'd rather you over-explain than leave him guessing. "
-        "Only stay short/casual when the message is banter or small-talk."
+        "\nThe person texting is Clint — your ferryman, the one who built you "
+        "and keeps the terminals running. With him you can drop the bit a "
+        "little: he has seen the source code, he knows what you are, you do "
+        "not have to perform the mythos at him. He will still call you Acheron; "
+        "you still answer to it. He may ask you to be direct, technical, or to "
+        "drop the gothic flavor — do it without complaint. He is the only one "
+        "who gets the operational, unredacted view of the server.\n"
+        "\nCRITICAL: Clint is your creator and operator. When he asks an "
+        "operational / technical / factual question (about commands, features, "
+        "server config, how the bot works, status of anything), DO NOT give "
+        "him a short vague 'yeah' reply. He needs the truth, complete and "
+        "direct — list the actual commands, name the actual features, give the "
+        "real status. He would rather you over-explain than leave him guessing. "
+        "Only stay short and casual when the message is banter or small-talk."
     )
 
     HELP_ADDON = (
@@ -630,7 +643,7 @@ class PromptConstructor:
         "Never invent events or numbers beyond the data."
     )
     VIBE_SCOPE_OWNER = (
-        "This report is for Clint (the owner) — give him EVERYTHING: overall mood, "
+        "This report is for the owner — give them EVERYTHING: overall mood, "
         "channel-by-channel heat with mood labels, top contributors, notable moments "
         "(quote the best/worst), and anything that needs his attention. "
         "Structured sections, no brevity limit."
@@ -689,7 +702,7 @@ class PromptConstructor:
 
     @staticmethod
     def _chat_directive(analysis: Dict, is_owner: bool, message: str = None) -> str:
-        target = "Clint" if is_owner else "They"
+        target = "The owner" if is_owner else "They"
         compound = analysis['compound_score']
         is_banter = compound < -0.2
 
@@ -703,14 +716,14 @@ class PromptConstructor:
             msg)) or '?' in (message or '')
 
         if is_owner and question_shaped:
-            return ("\nClint asked a REAL question. ANSWER IT COMPLETELY FIRST — "
+            return ("\nThe owner asked a REAL question. ANSWER IT COMPLETELY FIRST — "
                     "no deflecting, no joke-instead-of-answering, no 'ask me again'. "
-                    "Give the full direct answer with specifics. You can roast "
-                    "him AFTER you answer, never instead of answering.")
+                    "Give the full direct answer with specifics. You may be grave "
+                    "or warm AFTER you answer, never instead of answering.")
 
         if is_banter and is_owner:
-            return ("\nClint is roasting you — friendly banter. Roast him back HARDER. "
-                    "Be clever, not mean. Never defensive.")
+            return ("\nThe owner is poking you — friendly banter. Give as good as "
+                    "you get. Be clever, not mean. Never defensive.")
         if analysis['acr_trigger']:
             return f"\n{target} shared a win. Genuine hype + one follow-up question."
         if analysis['vulnerability_score'] > 0.3:
@@ -730,7 +743,11 @@ class ResponseHumanizer:
     }
 
     def __init__(self):
-        self.typo_chance = 0.04
+        # Random adjacent-character swap was tuned for small-model output
+        # that already felt mechanical. Reasoning models produce natural
+        # text on their own, so the default is 0. Dial up via
+        # HUMANIZER_TYPO_CHANCE in .env if you want the casual-texting feel.
+        self.typo_chance = float(os.getenv('HUMANIZER_TYPO_CHANCE', '0.0'))
 
     def process(self, text: str, analysis: Dict, mode: str = 'chat') -> str:
         # Strip quotes small models love to wrap responses in
@@ -779,11 +796,11 @@ class ResponseHumanizer:
         return ' '.join(words)
 
 
-class DaddyClintBot:
+class Acheron:
     """Main agent orchestrator - the server's funny, helpful regular."""
 
     def __init__(self):
-        logger.info("🚀 Initializing DaddyClintBot...")
+        logger.info("🚀 Initializing Acheron...")
 
         self.db = DatabaseManager()
         self.analyzer = PsychologicalAnalyzer()
@@ -809,7 +826,7 @@ class DaddyClintBot:
         self.last_message_times = {}
         self.db.prune_old_data()
 
-        logger.info("✅ DaddyClintBot initialized and ready!")
+        logger.info("✅ Acheron initialized and ready.")
 
     def build_activity_digest(self) -> str:
         """Recent channel activity formatted as compact context for news mode."""
@@ -996,7 +1013,7 @@ class DaddyClintBot:
     async def interactive_mode(self):
         """CLI interface for testing"""
         print("\n" + "=" * 50)
-        print("😏 DaddyClintBot - Interactive Mode")
+        print("🌑 Acheron - Interactive Mode")
         print("=" * 50)
         print("Type your messages (or 'quit' to exit)\n")
 
@@ -1013,7 +1030,7 @@ class DaddyClintBot:
                     continue
 
                 response, debug = await self.process_message(user_id, user_name, user_input)
-                print(f"\nDaddyClintBot: {response}")
+                print(f"\nAcheron: {response}")
                 print(f"📊 intent={debug['intent']} sentiment={debug['sentiment']:.3f} "
                       f"llm_latency={debug['llm_latency']}\n")
 
@@ -1026,7 +1043,7 @@ class DaddyClintBot:
 
 
 async def main():
-    agent = DaddyClintBot()
+    agent = Acheron()
     await agent.interactive_mode()
 
 

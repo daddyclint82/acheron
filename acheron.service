@@ -1,0 +1,15 @@
+[Unit]
+Description=Acheron Discord Bot (The No Sleep Zone terminal)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/daddyclint82/.openclaw/workspace/acheron
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/home/daddyclint82/.openclaw/workspace/acheron/venv/bin/python src/discord_bot.py
+Restart=on-failure
+RestartSec=10
+KillSignal=SIGTERM
+
+[Install]
+WantedBy=default.target
