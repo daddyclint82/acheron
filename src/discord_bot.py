@@ -804,7 +804,7 @@ async def main():
 
     attempt = 0
     while True:
-        bot = DaddyClintDiscordBot()
+        bot = AcheronDiscordBot()
 
         # Graceful shutdown on SIGTERM (systemd stop)
         loop = asyncio.get_running_loop()
