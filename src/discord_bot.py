@@ -1,4 +1,4 @@
-"""DaddyClintBot - Discord client.
+"""Acheron - Discord client. The Guardian of the Deep Hours.
 
 Resilience model:
     - discord.py auto-reconnects gateway drops; this file handles the fatal cases
@@ -24,7 +24,7 @@ import discord
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
 
-from agent import DaddyClintBot
+from agent import Acheron
 from snapshot import run_snapshot
 
 # Load environment variables
@@ -45,8 +45,8 @@ logging.basicConfig(
 logger = logging.getLogger('DiscordBot')
 
 
-class DaddyClintDiscordBot(commands.Bot):
-    """Discord bot wrapper for the DaddyClintBot engine"""
+class AcheronDiscordBot(commands.Bot):
+    """Discord bot wrapper for the Acheron engine"""
 
     def __init__(self):
         intents = discord.Intents.default()
@@ -60,7 +60,7 @@ class DaddyClintDiscordBot(commands.Bot):
             case_insensitive=True
         )
 
-        self.engine: DaddyClintBot = None
+        self.engine: Acheron = None
         self.start_time = time.time()
         self.owner_id = os.getenv('OWNER_ID', '1496169097942274208')
 
@@ -108,9 +108,9 @@ class DaddyClintDiscordBot(commands.Bot):
     # ---------------- lifecycle ----------------
 
     async def setup_hook(self):
-        logger.info("🚀 Initializing DaddyClintBot engine...")
+        logger.info("🚀 Initializing Acheron engine...")
         try:
-            self.engine = DaddyClintBot()
+            self.engine = Acheron()
             logger.info("✅ Engine loaded!")
         except Exception as e:
             logger.error(f"❌ Failed to initialize engine: {e}")
@@ -526,7 +526,7 @@ class DaddyClintDiscordBot(commands.Bot):
     @commands.command(name='status')
     async def status(self, ctx):
         """Show bot status"""
-        embed = discord.Embed(title="😏 DaddyClintBot Status", color=discord.Color.blue())
+        embed = discord.Embed(title="🌑 Acheron Status", color=discord.Color.blue())
         embed.add_field(name="Engine", value="✅ Online" if self.engine else "❌ Offline", inline=True)
         embed.add_field(name="Latency", value=f"{round(self.latency * 1000)}ms", inline=True)
         embed.add_field(name="Servers", value=len(self.guilds), inline=True)
@@ -694,7 +694,7 @@ class DaddyClintDiscordBot(commands.Bot):
     async def persona(self, ctx):
         """Show bot persona info"""
         embed = discord.Embed(
-            title="😏 Who is DaddyClintBot?",
+            title="🌑 Who is Acheron?",
             description="The server's resident funny guy who actually knows where everything is",
             color=discord.Color.purple()
         )

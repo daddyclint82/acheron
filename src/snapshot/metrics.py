@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple
 
-from agent import DaddyClintBot  # for the shared _mood_label (consistency with !vibe)
+from agent import Acheron  # for the shared _mood_label (consistency with !vibe)
 
 from .options import SnapshotConfig, SnapshotOptions
 
@@ -92,7 +92,7 @@ def compute(samples: List[ChannelSample], opts: SnapshotOptions,
 
         avg = (sum(s.compounds) / len(s.compounds)
                if len(s.compounds) >= cfg.min_msgs_for_mood else None)
-        mood = DaddyClintBot._mood_label(avg) if avg is not None else 'n/a'
+        mood = Acheron._mood_label(avg) if avg is not None else 'n/a'
         burst = s.last_sixth_count >= 0.4 * s.msg_count and s.msg_count >= 6
         top = sorted(s.author_counts.items(), key=lambda kv: kv[1], reverse=True)[:5]
         channels.append(ChannelMetrics(
@@ -109,7 +109,7 @@ def compute(samples: List[ChannelSample], opts: SnapshotOptions,
     scanned = sum(1 for c in channels if c.activity_tier != 'skipped')
     skipped = len(channels) - scanned
     total_msgs = sum(c.msg_count for c in channels)
-    overall = (DaddyClintBot._mood_label(sum(all_compounds) / len(all_compounds))
+    overall = (Acheron._mood_label(sum(all_compounds) / len(all_compounds))
                if all_compounds else 'n/a')
 
     highlights = _highlights(channels, skipped_reasons, samples, cfg,

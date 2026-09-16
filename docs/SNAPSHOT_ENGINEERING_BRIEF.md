@@ -1,6 +1,6 @@
 # Engineering Brief — `!snapshot`: On-Demand Server Awareness for Acheron
 
-**Repo:** `daddyclint82/daddyclintbot` · **Target branch:** `main` · **Brief version:** 1.0 (2026-09-04)
+**Repo:** `daddyclint82/acheron` · **Target branch:** `main` · **Brief version:** 1.0 (2026-09-04)
 **Audience:** an implementing LLM/engineer with repo access. This document is the complete spec. Read it fully before writing code.
 
 > **How to use this file:** paste the whole thing (or point the model at this path) and say:
@@ -45,14 +45,14 @@ Give the server owner (and optionally staff) a **point-in-time snapshot** of the
 
 ### 2.1 Layout
 ```
-daddyclintbot/
+acheron/
 ├── .env                      # secrets + config (never commit; mode 600)
 ├── .env.example              # documented keys, no values  ← you will extend this
 ├── .gitignore
 ├── Modelfile                 # FROM qwen3.5:4b, num_ctx 16384 (reference only)
 ├── README.md
 ├── SETUP_NOTES.md
-├── daddyclintbot.service     # systemd unit (documented, not yet deployed)
+├── acheron.service     # systemd unit (documented, not yet deployed)
 ├── requirements.txt
 ├── config/server_knowledge.md
 ├── docs/SNAPSHOT_ENGINEERING_BRIEF.md   ← this file
@@ -83,7 +83,7 @@ class OllamaConnector:
     async def generate(self, messages: List[Dict[str, str]], num_predict: int = None) -> str
     # "Retries with backoff, never raises." Returns a fallback string on total failure.
 
-class DaddyClintBot:                       # the engine; exposed as bot.engine
+class Acheron:                       # the engine; exposed as bot.engine
     self.db: DatabaseManager
     self.analyzer: PsychologicalAnalyzer
     self.ollama: OllamaConnector
@@ -94,7 +94,7 @@ class DaddyClintBot:                       # the engine; exposed as bot.engine
                               num_predict_override=None) -> Tuple[str, Dict]
 ```
 
-`src/discord_bot.py` — `class DaddyClintDiscordBot(commands.Bot)`
+`src/discord_bot.py` — `class AcheronDiscordBot(commands.Bot)`
 ```python
 def _is_owner(self, author) -> bool                 # str(author.id) == OWNER_ID
 async def _keep_typing(self, channel)               # typing indicator helper
@@ -433,12 +433,12 @@ Run: `venv/bin/pip install -r requirements-dev.txt && venv/bin/pytest -q` — mu
 - [ ] `!snapshot` twice within 5 min → second reply footer shows `cache Ns`; `!snapshot fresh` re-collects.
 - [ ] `grep -n "tasks.loop" src/discord_bot.py` count unchanged (4). `git diff --stat` shows `agent.py` touched only in `OllamaConnector.generate`.
 - [ ] `!vibe !stats !health !persona !channels !news !status` produce the same output shape as before (spot check).
-- [ ] No message content in `logs/daddyclintbot.log` for a snapshot run (grep a known phrase posted during the test).
+- [ ] No message content in `logs/acheron.log` for a snapshot run (grep a known phrase posted during the test).
 - [ ] `pytest -q` green offline.
 
 ### 9.3 Manual verification script (for the operator)
 ```bash
-cd ~/projects/daddyclintbot
+cd ~/projects/acheron
 # stop the running instance first — one gateway connection per token
 pkill -TERM -f "src/discord_bot.py"; sleep 3
 venv/bin/pytest -q
@@ -457,7 +457,7 @@ venv/bin/python src/discord_bot.py            # .env supplies token/host; watch 
 5. `README.md`: one short "!snapshot" section (usage + privacy note); `SETUP_NOTES.md`: env knobs pointer
 6. Commit as **one** feature commit on top of `main` (do not squash unrelated pending fixes into it):
    `feat(snapshot): on-demand server awareness command with resilient collection and local-model summary`
-7. Push over SSH (`git@github.com:daddyclint82/daddyclintbot.git`). **Never** prompt the operator for a GitHub username/password — password auth is dead; SSH key + `gh` are already configured on the host.
+7. Push over SSH (`git@github.com:daddyclint82/acheron.git`). **Never** prompt the operator for a GitHub username/password — password auth is dead; SSH key + `gh` are already configured on the host.
 
 ### Definition of Done
 All §9.2 boxes checked, `pytest` green, the operator has seen one real `!snapshot` embed produced with `qwen3.5:latest`, and `git log -1` shows the feature commit with `agent.py`'s diff confined to `generate()`.
@@ -467,7 +467,7 @@ All §9.2 boxes checked, `pytest` green, the operator has seen one real `!snapsh
 ## Appendix A — Kickoff prompt (paste to the implementing model)
 
 ```
-You are implementing a feature in the repo daddyclint82/daddyclintbot (Python 3.12, discord.py 2.7.1, ollama 0.6.2).
+You are implementing a feature in the repo daddyclint82/acheron (Python 3.12, discord.py 2.7.1, ollama 0.6.2).
 Read docs/SNAPSHOT_ENGINEERING_BRIEF.md in full and implement Sections 4–10 exactly.
 
 Non-negotiables:

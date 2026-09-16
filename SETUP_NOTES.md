@@ -1,4 +1,4 @@
-# DaddyClintBot - Setup & Configuration Notes
+# Acheron - Setup & Configuration Notes
 
 ## Project Overview
 Discord bot with psychological engagement engine using Ollama LLM and VADER sentiment analysis.
@@ -26,7 +26,7 @@ OLLAMA_TIMEOUT=90            # hard cap per generation
 OLLAMA_NUM_PREDICT=180       # token cap so small models don't ramble
 NEWS_LOOKBACK_HOURS=24       # how far back !news looks
 HISTORY_LENGTH=8             # per-user conversation memory
-DB_PATH=data/daddyclintbot.db
+DB_PATH=data/acheron.db
 LOG_LEVEL=INFO
 ```
 
@@ -44,7 +44,7 @@ This IP (172.18.224.1) is the Windows host IP from WSL2. If this changes, update
 
 ### 1. Navigate to Project
 ```bash
-cd /home/daddyclint82/.openclaw/workspace/daddyclintbot
+cd /home/daddyclint82/.openclaw/workspace/acheron
 ```
 
 ### 2. Create Virtual Environment
@@ -154,14 +154,14 @@ async def _keep_typing(self, channel):
 ## Project Structure
 
 ```
-daddyclintbot/
+acheron/
 ├── src/
-│   ├── agent.py              # Psychological engine (DaddyClintBot class)
+│   ├── agent.py              # Psychological engine (Acheron class)
 │   └── discord_bot.py        # Discord integration
 ├── data/                     # SQLite database (auto-created)
 ├── logs/                     # Log files (auto-created)
-│   ├── daddyclintbot.log     # Main bot logs
-│   └── discord_bot.log       # Discord-specific logs
+│   ├── acheron.log          # Main bot logs
+│   └── acheron-discord.log  # Discord-specific logs
 ├── .env                      # Environment variables (NOT in git)
 ├── .env.example              # Template for .env
 └── requirements.txt          # Python dependencies
@@ -206,7 +206,7 @@ ollama pull llama3
 3. Restart bot
 
 ## Last Updated
-2026-05-12 - Initial deployment with Ollama integration fixes
+2026-09-15 - Rebranded from DaddyClintBot to Acheron. Class names, DB path, log filenames, service unit, working directory, and persona prompt all updated to match the new identity.
 
 ## Next Steps / TODO
 - [ ] Add more Discord slash commands
